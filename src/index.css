@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer base {
+  html {
+    background-color: #141416;
+    color: #f4f4f5;
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background-color: #141416;
+    color: #f4f4f5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes rfl-snow-fall {
+  0% {
+    transform: translate3d(0, -16vh, 0) rotate(-2deg);
+  }
+  25% {
+    transform: translate3d(var(--sway, 1vw), 18vh, 0) rotate(1.5deg);
+  }
+  50% {
+    transform: translate3d(calc(var(--sway, 1vw) * -0.5), 52vh, 0) rotate(-1.5deg);
+  }
+  75% {
+    transform: translate3d(calc(var(--sway, 1vw) * 0.7), 84vh, 0) rotate(2deg);
+  }
+  100% {
+    transform: translate3d(calc(var(--sway, 1vw) * -0.4), 116vh, 0) rotate(-2deg);
+  }
+}
+
+.rfl-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.rfl-rain-foreground {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.rfl-drop-item {
+  position: absolute;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  will-change: transform;
+  animation-name: rfl-snow-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+

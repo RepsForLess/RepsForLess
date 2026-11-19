@@ -1,0 +1,8 @@
+{
+  "name": "RepsForLess",
+  "description": "UK streetwear, trainers, luxury-style watches, 925 silver-plated jewellery, designer belts, B2B wholesale watch stock, and interactive scratch cards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
