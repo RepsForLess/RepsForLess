@@ -1,6 +1,7 @@
 import {useState, type FormEvent} from 'react';
 import {CheckCircle2, MessageSquare, Package, ShieldCheck, TrendingUp, Zap} from 'lucide-react';
 import {CATEGORY_IMAGES, CONTACT_PHONE} from '../data/catalog';
+import {submitB2BQuoteApi} from '../lib/storeApi';
 import {ProductImage} from './ProductImage';
 
 const SELLING_POINTS = [
@@ -46,16 +47,11 @@ export function B2BSection() {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch('/api/b2b/quote', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({businessName, contactName, phone, quantity, notes}),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Unable to submit wholesale inquiry.');
+      const result = await submitB2BQuoteApi({businessName, contactName, phone, quantity, notes});
+      if (!result.ok) {
+        setError(result.error);
       } else {
-        setQuoteRef(data.quote?.reference || 'B2B-CONFIRMED');
+        setQuoteRef(result.reference);
       }
     } catch {
       setError('Network error while submitting quote request.');

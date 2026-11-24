@@ -1,6 +1,7 @@
 import {useState, type FormEvent} from 'react';
 import {CheckCircle2, Copy, MessageSquare, Minus, Plus, ShoppingBag, Trash2, X} from 'lucide-react';
 import {CONTACT_PHONE} from '../data/catalog';
+import {submitOrderInquiryApi} from '../lib/storeApi';
 import type {BagItem} from '../types/store';
 import {ProductImage} from './ProductImage';
 
@@ -54,25 +55,20 @@ export function BagDrawer({
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch('/api/orders/inquiry', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          customerName,
-          phone,
-          postcode,
-          paymentMethod,
-          itemsSummary,
-          subtotal,
-          discountApplied: appliedDiscount,
-          promoCode: promoCode || undefined,
-        }),
+      const result = await submitOrderInquiryApi({
+        customerName,
+        phone,
+        postcode,
+        paymentMethod,
+        itemsSummary,
+        subtotal,
+        discountApplied: appliedDiscount,
+        promoCode: promoCode || undefined,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Could not confirm order request.');
+      if (!result.ok) {
+        setError(result.error);
       } else {
-        setConfirmedRef(data.order?.reference || 'RFL-1041');
+        setConfirmedRef(result.reference);
       }
     } catch {
       setError('Network error while submitting order.');

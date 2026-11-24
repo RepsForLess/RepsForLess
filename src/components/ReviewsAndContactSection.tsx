@@ -1,6 +1,7 @@
 import {useEffect, useState, type FormEvent} from 'react';
 import {Bell, ChevronDown, MessageSquare, Star} from 'lucide-react';
 import {CONTACT_PHONE, EDITORIAL_GUIDES, FAQ_ITEMS} from '../data/catalog';
+import {fetchReviewsApi, postReviewApi, subscribeAlertsApi} from '../lib/storeApi';
 import type {ReviewItem} from '../types/store';
 
 export function ReviewsAndContactSection() {
@@ -29,13 +30,10 @@ export function ReviewsAndContactSection() {
   const [msgText, setMsgText] = useState('');
 
   useEffect(() => {
-    fetch('/api/reviews')
-      .then((res) => res.json())
+    fetchReviewsApi()
       .then((data) => {
-        if (Array.isArray(data.reviews)) {
-          setReviews(data.reviews);
-          setAvgRating(Number(data.averageRating || 5.0));
-        }
+        setReviews(data.reviews);
+        setAvgRating(data.averageRating);
       })
       .finally(() => setLoadingReviews(false));
   }, []);
@@ -46,26 +44,19 @@ export function ReviewsAndContactSection() {
     setRevError('');
     setRevSubmittedMsg('');
     try {
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          name: revName,
-          createdAt: revDate,
-          product: revProduct,
-          rating: revRating,
-          title: revTitle,
-          body: revBody,
-        }),
+      const result = await postReviewApi({
+        name: revName,
+        createdAt: revDate,
+        product: revProduct,
+        rating: revRating,
+        title: revTitle,
+        body: revBody,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setRevError(data.error || 'Could not post review.');
+      if (!result.ok) {
+        setRevError(result.error);
       } else {
-        setReviews(data.reviews || []);
-        if (typeof data.averageRating === 'number') {
-          setAvgRating(data.averageRating);
-        }
+        setReviews(result.reviews);
+        setAvgRating(result.averageRating);
         setRevName('');
         setRevDate(new Date().toISOString().slice(0, 10));
         setRevProduct('');
@@ -86,14 +77,9 @@ export function ReviewsAndContactSection() {
     e.preventDefault();
     setSubError('');
     try {
-      const res = await fetch('/api/subscribers', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email: subEmail, stockUpdates: true, reminders: true}),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setSubError(data.error || 'Enter a valid email address.');
+      const result = await subscribeAlertsApi(subEmail);
+      if (!result.ok) {
+        setSubError(result.error);
       } else {
         setSubSuccess(true);
         setSubEmail('');

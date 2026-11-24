@@ -1,6 +1,12 @@
 import {useCallback, useEffect, useRef, useState, type FormEvent, type PointerEvent} from 'react';
 import {Check, CheckCircle2, Lock, MessageSquare, RotateCcw, ShieldCheck, Ticket} from 'lucide-react';
 import {CONTACT_PHONE, PRIZE_TIERS, SCRATCH_ALLOCATION, SCRATCH_CARD_PRICE} from '../data/catalog';
+import {
+  completeScratchCardApi,
+  fetchScratchStatsApi,
+  issueScratchCardApi,
+  payScratchCardApi,
+} from '../lib/storeApi';
 import type {ScratchCardData, ScratchPanelData} from '../types/store';
 
 interface ScratchCardsSectionProps {
@@ -152,15 +158,8 @@ export function ScratchCardsSection({onApplyPromo}: ScratchCardsSectionProps) {
   const [issuedCount, setIssuedCount] = useState(0);
 
   const loadStats = useCallback(async () => {
-    try {
-      const res = await fetch('/api/scratch/stats');
-      const data = await res.json();
-      if (res.ok && typeof data.issuedCount === 'number') {
-        setIssuedCount(data.issuedCount);
-      }
-    } catch {
-      // Ignore stats error
-    }
+    const data = await fetchScratchStatsApi();
+    setIssuedCount(data.issuedCount);
   }, []);
 
   useEffect(() => {
@@ -174,26 +173,21 @@ export function ScratchCardsSection({onApplyPromo}: ScratchCardsSectionProps) {
     setTokenError('');
     setApplied(false);
     try {
-      const res = await fetch('/api/scratch/pay', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          customerName,
-          phone,
-          paymentMethod,
-          paymentReference,
-          confirmedSent,
-        }),
+      const result = await payScratchCardApi({
+        customerName,
+        phone,
+        paymentMethod,
+        paymentReference,
+        confirmedSent,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setPayError(data.error || 'Payment verification required before scratching.');
-      } else if (data.card) {
-        setCard(data.card);
+      if (!result.ok) {
+        setPayError(result.error);
+      } else {
+        setCard(result.card);
         setRevealedIds(new Set());
         setResetSeed((s) => s + 1);
-        if (typeof data.issuedCount === 'number') {
-          setIssuedCount(data.issuedCount);
+        if (typeof result.issuedCount === 'number') {
+          setIssuedCount(result.issuedCount);
         }
       }
     } catch {
@@ -209,16 +203,11 @@ export function ScratchCardsSection({onApplyPromo}: ScratchCardsSectionProps) {
     setPayError('');
     setApplied(false);
     try {
-      const res = await fetch('/api/scratch/issue', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({token: tokenInput}),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setTokenError(data.error || 'Payment of £5 required before unlocking a scratch card.');
-      } else if (data.card) {
-        setCard(data.card);
+      const result = await issueScratchCardApi(tokenInput);
+      if (!result.ok) {
+        setTokenError(result.error);
+      } else {
+        setCard(result.card);
         setRevealedIds(new Set());
         setResetSeed((s) => s + 1);
       }
@@ -235,11 +224,7 @@ export function ScratchCardsSection({onApplyPromo}: ScratchCardsSectionProps) {
         const next = new Set(prev);
         next.add(panelId);
         if (card?.paidToken && next.size >= card.panels.length) {
-          void fetch('/api/scratch/complete', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({token: card.paidToken}),
-          });
+          void completeScratchCardApi(card.paidToken);
         }
         return next;
       });
@@ -502,11 +487,7 @@ export function ScratchCardsSection({onApplyPromo}: ScratchCardsSectionProps) {
                         onClick={() => {
                           setRevealedIds(new Set(card.panels.map((p) => p.id)));
                           if (card.paidToken) {
-                            void fetch('/api/scratch/complete', {
-                              method: 'POST',
-                              headers: {'Content-Type': 'application/json'},
-                              body: JSON.stringify({token: card.paidToken}),
-                            });
+                            void completeScratchCardApi(card.paidToken);
                           }
                         }}
                         className="text-xs font-semibold text-zinc-300 underline underline-offset-4 hover:text-[#CCFF00] cursor-pointer self-start sm:self-auto"

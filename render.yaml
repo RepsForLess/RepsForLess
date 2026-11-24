@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: repsforless
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: ./node_modules/.bin/tsx server.ts
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
